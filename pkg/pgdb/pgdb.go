@@ -1,4 +1,4 @@
-package db
+package pgdb
 
 import (
 	"database/sql"
@@ -12,7 +12,7 @@ func ConnectDatabase(host string, port int, user string, password string, dbname
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	dataBase, err := sql.Open("postgres", connStr)
+	dataBase, err := sql.Open("pgdb", connStr)
 	if err != nil {
 		return nil, errors.New("error connecting to database")
 	}

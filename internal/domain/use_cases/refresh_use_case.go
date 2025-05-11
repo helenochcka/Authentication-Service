@@ -1,44 +1,44 @@
 package use_cases
 
 import (
-	"Authentication-Service/internal/auth_service"
-	"Authentication-Service/internal/auth_service/dto"
-	"Authentication-Service/internal/auth_service/services"
+	"Authentication-Service/internal/domain"
+	"Authentication-Service/internal/domain/dto"
+	"Authentication-Service/internal/domain/services"
 	"errors"
 )
 
 type RefreshUseCase struct {
-	as *services.AuthService
-	ts *services.TokenService
-	wn *services.WebhookNotifier
+	as *services.AccessTokenService
+	ts *services.RefreshTokenService
+	wn *services.WebhookService
 }
 
 func NewRefreshUseCase(
-	as *services.AuthService,
-	ts *services.TokenService,
-	wn *services.WebhookNotifier,
+	as *services.AccessTokenService,
+	ts *services.RefreshTokenService,
+	wn *services.WebhookService,
 ) *RefreshUseCase {
 	return &RefreshUseCase{as: as, ts: ts, wn: wn}
 }
 
 func (ruc *RefreshUseCase) Execute(userData *dto.UserData, tokens *dto.TokenPair) (*dto.TokenPair, error) {
-	refreshToken, err := ruc.ts.GetRefreshToken(tokens.RefreshToken)
+	refreshToken, err := ruc.ts.GetRefreshTokenEntity(tokens.RefreshToken)
 	if err != nil {
 		return nil, err
 	}
 
 	payload, err := ruc.as.PayloadFromAccessToken(tokens.AccessToken)
-	if errors.Is(err, auth_service.ErrTokenExpired) {
+	if errors.Is(err, domain.ErrTokenExpired) {
 		payload, err = ruc.as.PayloadFromExpiredAccessToken(tokens.AccessToken)
 		if err != nil {
 			return nil, err
 		}
 		if payload.JTI != refreshToken.AccessJTI {
-			return nil, auth_service.ErrTokensAreNotAPair
+			return nil, domain.ErrTokensAreNotAPair
 		}
 	} else if err == nil {
 		if payload.JTI != refreshToken.AccessJTI {
-			return nil, auth_service.ErrTokensAreNotAPair
+			return nil, domain.ErrTokensAreNotAPair
 		}
 		err = ruc.as.AddJTIToBlacklist(refreshToken.AccessJTI, payload.ExpiresAt)
 		if err != nil {
@@ -54,11 +54,15 @@ func (ruc *RefreshUseCase) Execute(userData *dto.UserData, tokens *dto.TokenPair
 	}
 
 	if userData.UserAgent != refreshToken.UserAgent {
-		return nil, auth_service.ErrUserAgentDoesNotMatch
+		return nil, domain.ErrUserAgentDoesNotMatch
 	}
 
 	if userData.IpAddress != refreshToken.IpAddress {
-		err = ruc.wn.NotifySuspiciousIp(refreshToken.UserId, userData.IpAddress, refreshToken.IpAddress, refreshToken.UserAgent)
+		err = ruc.wn.NotifySuspiciousIp(
+			refreshToken.UserId,
+			userData.IpAddress,
+			refreshToken.IpAddress,
+			refreshToken.UserAgent)
 		if err != nil {
 			return nil, err
 		}

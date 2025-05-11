@@ -2,14 +2,14 @@ package main
 
 import (
 	"Authentication-Service/config"
-	"Authentication-Service/internal/auth_service/services"
-	"Authentication-Service/internal/auth_service/use_cases"
-	"Authentication-Service/internal/clients"
+	"Authentication-Service/internal/domain/services"
+	"Authentication-Service/internal/domain/use_cases"
 	"Authentication-Service/internal/handlers"
 	"Authentication-Service/internal/middlewares"
 	"Authentication-Service/internal/repositories/postgres"
 	"Authentication-Service/internal/repositories/redis"
-	"Authentication-Service/pkg/db"
+	"Authentication-Service/pkg/clients"
+	"Authentication-Service/pkg/pgdb"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -31,37 +31,37 @@ import (
 func main() {
 	cfg := config.LoadYamlConfig("config/config.yaml")
 
-	dataBase, err := db.ConnectDatabase(cfg.DB.Host, cfg.DB.Port, cfg.DB.UserName, cfg.DB.Password, cfg.DB.DBName)
+	db, err := pgdb.ConnectDatabase(cfg.DB.Host, cfg.DB.Port, cfg.DB.UserName, cfg.DB.Password, cfg.DB.DBName)
 	if err != nil {
 		log.Fatal(err)
 	}
 	r := gin.Default()
 
-	redisClient := clients.ProduceRedisClient(cfg.Redis.Uri)
-	httpClient := clients.ProduceHTTPClient(cfg.Webhook.Url, cfg.Webhook.TimeOut)
+	rc := clients.ProduceRedisClient(cfg.Redis.Host, cfg.Redis.Port)
+	wc := clients.NewWebhookHTTPClient(cfg.Webhook.Host, cfg.Webhook.TimeOut)
 
-	tr := postgres.NewTokenRepoPsSQL(dataBase)
-	jr := redis.NewJTIRepoRedis(redisClient)
+	tr := postgres.NewRefreshTokenRepoPG(db)
+	jr := redis.NewJTIRepoRedis(rc)
 
-	as := services.NewAuthService(cfg.Server.SecretKey, cfg.Server.TokenExpTime, jr)
-	ts := services.NewTokenService(tr, cfg.Server.TokenExpTime, cfg.Server.SecretKey)
-	wn := services.NewWebhookNotifier(cfg.Webhook.Url, httpClient)
+	as := services.NewAccessTokenService(cfg.Server.SecretKey, cfg.Server.TokenExpTime, jr)
+	ts := services.NewRefreshTokenService(tr, cfg.Server.TokenExpTime)
+	wn := services.NewWebhookService(wc)
 
-	luc := use_cases.NewLoginUseCase(as, ts)
+	linuc := use_cases.NewLoginUseCase(as, ts)
 	ruc := use_cases.NewRefreshUseCase(as, ts, wn)
-	duc := use_cases.NewDeauthorizeUseCase(as, ts)
+	loutuc := use_cases.NewLogoutUseCase(as, ts)
 
-	ah := handlers.NewAuthHandler(luc, ruc, duc)
+	ah := handlers.NewAuthHandler(linuc, ruc, loutuc)
 
 	auc := use_cases.NewAuthUseCase(as)
 	am := middlewares.NewAuthMiddleware(auc)
 
-	r.POST("/login", am.GetHeaders(), ah.Login)
-	r.PUT("/tokens/refresh", am.GetHeaders(), ah.RefreshTokens)
+	r.POST("/login", ah.Login)
+	r.PUT("/tokens/refresh", ah.RefreshTokens)
 	r.GET("/users/guid", am.AuthUser(), ah.GetUserId)
 	r.POST("/logout", ah.Logout)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	_ = r.Run(cfg.Server.Address + ":" + strconv.Itoa(cfg.Server.Port))
+	_ = r.Run(cfg.Server.Host + ":" + strconv.Itoa(cfg.Server.Port))
 }

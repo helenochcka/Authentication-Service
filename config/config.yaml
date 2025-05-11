@@ -1,19 +1,20 @@
 server:
-  address: 0.0.0.0
+  host: 0.0.0.0
   port: 8080
   secret_key: a79c73a0-9ca5-4a16-afef-296497aff250
   token_exp_time: 15
 
 db:
-  host: db
+  host: pgdb
   port: 5432
   user_name: strong_user
   password: strong_password
   dbname: auth_service_db
 
 webhook:
-  url: localhost:80
+  host: localhost:80
   time_out: 5
 
 redis:
-  uri: redis:6379
+  host: redis
+  port: 6379

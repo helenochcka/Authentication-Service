@@ -1,28 +1,27 @@
 package postgres
 
 import (
-	"Authentication-Service/internal/auth_service/entity"
-	"Authentication-Service/internal/auth_service/services"
+	"Authentication-Service/internal/domain/entities"
 	"Authentication-Service/internal/repositories"
 	"database/sql"
 )
 
-type TokenRepoPsSQL struct {
-	DB *sql.DB
+type RefreshTokenRepoPG struct {
+	db *sql.DB
 }
 
-func NewTokenRepoPsSQL(db *sql.DB) services.TokenRepo {
-	return &TokenRepoPsSQL{DB: db}
+func NewRefreshTokenRepoPG(db *sql.DB) *RefreshTokenRepoPG {
+	return &RefreshTokenRepoPG{db: db}
 }
 
-func (tr TokenRepoPsSQL) GetOne(tokenSHA string) (*entity.RefreshToken, error) {
+func (rtr *RefreshTokenRepoPG) GetOne(tokenSHA string) (*entities.RefreshToken, error) {
 	query := "SELECT token_sha, user_id, token_bcrypt, expires_at, used, user_agent, ip_address, access_jti FROM refresh_tokens WHERE token_sha = $1"
-	rows, err := tr.DB.Query(query, tokenSHA)
+	rows, err := rtr.db.Query(query, tokenSHA)
 	if err != nil {
 		return nil, err
 	}
 
-	var refreshToken entity.RefreshToken
+	var refreshToken entities.RefreshToken
 	if rows.Next() {
 		if err = rows.Scan(
 			&refreshToken.TokenSha,
@@ -47,9 +46,9 @@ func (tr TokenRepoPsSQL) GetOne(tokenSHA string) (*entity.RefreshToken, error) {
 	return &refreshToken, nil
 }
 
-func (tr TokenRepoPsSQL) Insert(refreshToken *entity.RefreshToken) error {
+func (rtr *RefreshTokenRepoPG) Insert(refreshToken *entities.RefreshToken) error {
 	stmt := "INSERT INTO refresh_tokens (token_sha, user_id, token_bcrypt, expires_at, used, user_agent, ip_address, access_jti) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
-	err := tr.DB.QueryRow(stmt,
+	_, err := rtr.db.Exec(stmt,
 		refreshToken.TokenSha,
 		refreshToken.UserId,
 		refreshToken.TokenBcrypt,
@@ -57,8 +56,7 @@ func (tr TokenRepoPsSQL) Insert(refreshToken *entity.RefreshToken) error {
 		refreshToken.Used,
 		refreshToken.UserAgent,
 		refreshToken.IpAddress,
-		refreshToken.AccessJTI,
-	).Err()
+		refreshToken.AccessJTI)
 	if err != nil {
 		return err
 	}
@@ -66,9 +64,9 @@ func (tr TokenRepoPsSQL) Insert(refreshToken *entity.RefreshToken) error {
 	return nil
 }
 
-func (tr TokenRepoPsSQL) Update(refreshToken *entity.RefreshToken) error {
+func (rtr *RefreshTokenRepoPG) Update(refreshToken *entities.RefreshToken) error {
 	stmt := "UPDATE refresh_tokens SET user_id=$1, token_bcrypt=$2, expires_at=$3, used=$4, user_agent=$5, ip_address=$6, access_jti=$7 WHERE token_sha = $8"
-	_, err := tr.DB.Exec(stmt,
+	_, err := rtr.db.Exec(stmt,
 		refreshToken.UserId,
 		refreshToken.TokenBcrypt,
 		refreshToken.ExpiresAt,

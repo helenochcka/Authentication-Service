@@ -1,11 +1,5 @@
 package dto
 
-type AccessTokenPayload struct {
-	UserId    string
-	ExpiresAt int64
-	JTI       string
-}
-
 type TokenPair struct {
 	AccessToken  string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 	RefreshToken string `json:"refresh_token" example:"c29tZS1iYXNlNjQtcmVmcmVzaC10b2tlbg=="`
@@ -16,7 +10,7 @@ type UserData struct {
 	IpAddress string
 }
 
-type UserId struct {
+type LoginData struct {
 	UserId string `form:"user_id" example:"12345"`
 }
 

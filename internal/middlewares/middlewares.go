@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	"Authentication-Service/internal/auth_service"
-	"Authentication-Service/internal/auth_service/use_cases"
+	"Authentication-Service/internal/domain"
+	"Authentication-Service/internal/domain/use_cases"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -12,49 +12,32 @@ type AuthMiddleware struct {
 	auc *use_cases.AuthUseCase
 }
 
-func NewAuthMiddleware(
-	auc *use_cases.AuthUseCase,
-) *AuthMiddleware {
-	return &AuthMiddleware{
-		auc: auc,
-	}
+func NewAuthMiddleware(auc *use_cases.AuthUseCase) *AuthMiddleware {
+	return &AuthMiddleware{auc: auc}
 }
 
 func (am *AuthMiddleware) AuthUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		accessToken := c.GetHeader("Authorization")
-		payload, err := am.auc.Execute(accessToken)
+		accessTokenString := c.GetHeader("Authorization")
+		at, err := am.auc.Execute(accessTokenString)
 		if err != nil {
-			mapUsersErrToHTTPErr(err, c)
+			mapDomainErrToHTTPErr(err, c)
 			c.Abort()
 			return
 		}
 
-		c.Set("user_id", payload.UserId)
+		c.Set("user_id", at.UserId)
 
 		c.Next()
 	}
 }
 
-func (am *AuthMiddleware) GetHeaders() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userAgent := c.Request.UserAgent()
-		ipAddress := c.ClientIP()
-
-		c.Set("user_agent", userAgent)
-		c.Set("ip_address", ipAddress)
-
-		c.Next()
-	}
-}
-
-func mapUsersErrToHTTPErr(err error, c *gin.Context) {
+func mapDomainErrToHTTPErr(err error, c *gin.Context) {
 	switch {
-	case errors.Is(err, auth_service.ErrTokenExpired) ||
-		errors.Is(err, auth_service.ErrTokenSignatureInvalid):
+	case errors.Is(err, domain.ErrTokenExpired) ||
+		errors.Is(err, domain.ErrTokenSignatureInvalid) ||
+		errors.Is(err, domain.ErrTokenBlacklisted):
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-	case errors.Is(err, auth_service.ErrTokenBlacklisted):
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 	default:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
