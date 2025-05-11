@@ -20,7 +20,7 @@ type Config struct {
 		UserName string `yaml:"user_name"`
 		Password string `yaml:"password"`
 		DBName   string `yaml:"dbname"`
-	} `yaml:"pgdb"`
+	} `yaml:"db"`
 
 	Webhook struct {
 		Host    string `yaml:"host"`

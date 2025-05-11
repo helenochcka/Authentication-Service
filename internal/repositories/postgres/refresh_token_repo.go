@@ -48,7 +48,7 @@ func (rtr *RefreshTokenRepoPG) GetOne(tokenSHA string) (*entities.RefreshToken, 
 
 func (rtr *RefreshTokenRepoPG) Insert(refreshToken *entities.RefreshToken) error {
 	stmt := "INSERT INTO refresh_tokens (token_sha, user_id, token_bcrypt, expires_at, used, user_agent, ip_address, access_jti) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
-	_, err := rtr.db.Exec(stmt,
+	err := rtr.db.QueryRow(stmt,
 		refreshToken.TokenSha,
 		refreshToken.UserId,
 		refreshToken.TokenBcrypt,
@@ -56,7 +56,7 @@ func (rtr *RefreshTokenRepoPG) Insert(refreshToken *entities.RefreshToken) error
 		refreshToken.Used,
 		refreshToken.UserAgent,
 		refreshToken.IpAddress,
-		refreshToken.AccessJTI)
+		refreshToken.AccessJTI).Err()
 	if err != nil {
 		return err
 	}

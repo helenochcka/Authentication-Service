@@ -10,7 +10,6 @@ definitions:
     type: object
 info:
   contact: {}
-  description: REST API for authentication
   title: Authentication-Service API
   version: "1.0"
 paths:
@@ -81,7 +80,7 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      summary: Deauthorize user
+      summary: Logout user
       tags:
       - auth
   /tokens/refresh:

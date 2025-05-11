@@ -5,7 +5,7 @@ server:
   token_exp_time: 15
 
 db:
-  host: pgdb
+  host: db
   port: 5432
   user_name: strong_user
   password: strong_password

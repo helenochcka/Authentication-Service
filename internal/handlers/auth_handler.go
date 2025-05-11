@@ -114,7 +114,7 @@ func (gh *GinHandler) GetUserId(c *gin.Context) {
 
 // Logout godoc
 //
-//	@Summary		Deauthorize user
+//	@Summary		Logout user
 //	@Description	Invalidate tokens
 //	@Tags			auth
 //	@Produce		json

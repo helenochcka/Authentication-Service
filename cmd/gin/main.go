@@ -21,13 +21,10 @@ import (
 
 // @title Authentication-Service API
 // @version 1.0
-// @description REST API for authentication
 // @securitydefinitions.apikey ApiKeyAuth
 // @in	header
 // @name	Authorization
 // @query.collection.format multi
-// @host      localhost:8080
-// @schemes http
 func main() {
 	cfg := config.LoadYamlConfig("config/config.yaml")
 

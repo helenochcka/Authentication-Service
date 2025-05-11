@@ -70,7 +70,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Deauthorize user",
+                "summary": "Logout user",
                 "parameters": [
                     {
                         "description": "tokens for invalidate",
@@ -258,7 +258,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Authentication-Service API",
-	Description:      "REST API for authentication",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
