@@ -1,0 +1,159 @@
+definitions:
+  dto.TokenPair:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      refresh_token:
+        example: c29tZS1iYXNlNjQtcmVmcmVzaC10b2tlbg==
+        type: string
+    type: object
+info:
+  contact: {}
+  description: REST API for authentication
+  title: Authentication-Service API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      description: Returns token pairs (access + refresh) by GUID
+      parameters:
+      - example: "12345"
+        in: query
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TokenPair'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get token pair
+      tags:
+      - auth
+  /logout:
+    post:
+      description: Invalidate tokens
+      parameters:
+      - description: tokens for invalidate
+        in: body
+        name: tokens
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TokenPair'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Deauthorize user
+      tags:
+      - auth
+  /tokens/refresh:
+    put:
+      description: Returns updated token pairs (access + refresh)
+      parameters:
+      - description: tokens for update
+        in: body
+        name: tokens
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TokenPair'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TokenPair'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Update a pair of tokens
+      tags:
+      - auth
+  /users/guid:
+    get:
+      description: Returns user's id (GUID)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get user id (GUID)
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
