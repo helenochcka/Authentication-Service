@@ -62,7 +62,7 @@ func (rts *RefreshTokenService) GenerateRefreshToken(userData *dto.UserData, acc
 		TokenSha:    tokenSha,
 		UserId:      userId,
 		TokenBcrypt: string(tokenBcryptBytes),
-		ExpiresAt:   time.Now().Add(time.Hour * time.Duration(rts.tokenExpTime)),
+		ExpiresAt:   time.Now().Add(time.Hour * 24 * time.Duration(rts.tokenExpTime)),
 		Used:        false,
 		UserAgent:   userData.UserAgent,
 		IpAddress:   userData.IpAddress,

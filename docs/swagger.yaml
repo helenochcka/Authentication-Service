@@ -8,6 +8,21 @@ definitions:
         example: c29tZS1iYXNlNjQtcmVmcmVzaC10b2tlbg==
         type: string
     type: object
+  dto.UserId:
+    properties:
+      user_id:
+        example: "12345"
+        type: string
+    type: object
+  handlers.HTTPError:
+    properties:
+      code:
+        example: EXAMPLE_ERROR_CODE
+        type: string
+      message:
+        example: example error message
+        type: string
+    type: object
 info:
   contact: {}
   title: Authentication-Service API
@@ -15,7 +30,7 @@ info:
 paths:
   /login:
     post:
-      description: Returns token pairs (access + refresh) by GUID
+      description: Returns token pair (access + refresh) for user id (GUID)
       parameters:
       - example: "12345"
         in: query
@@ -28,18 +43,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.TokenPair'
-        "400":
-          description: Bad Request
-          schema:
-            type: string
         "401":
-          description: Unauthorized
+          description: INVALID_QUERY_PARAMS
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "500":
-          description: Internal Server Error
+          description: INTERNAL_SERVER_ERROR
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
       summary: Get token pair
       tags:
       - auth
@@ -47,7 +58,7 @@ paths:
     post:
       description: Invalidate tokens
       parameters:
-      - description: tokens for invalidate
+      - description: tokens to invalidate
         in: body
         name: tokens
         required: true
@@ -56,38 +67,36 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
-          description: Bad Request
+          description: INVALID_JSON_BODY, TOKENS_NOT_PAIR
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "401":
-          description: Unauthorized
+          description: TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_BLACKLISTED
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "404":
-          description: Not Found
+          description: TOKEN_NOT_FOUND
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "409":
-          description: Conflict
+          description: TOKEN_ALREADY_USED
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "500":
-          description: Internal Server Error
+          description: INTERNAL_SERVER_ERROR
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
       summary: Logout user
       tags:
       - auth
   /tokens/refresh:
     put:
-      description: Returns updated token pairs (access + refresh)
+      description: Returns updated token pair (access + refresh)
       parameters:
-      - description: tokens for update
+      - description: tokens to update
         in: body
         name: tokens
         required: true
@@ -101,53 +110,49 @@ paths:
           schema:
             $ref: '#/definitions/dto.TokenPair'
         "400":
-          description: Bad Request
+          description: INVALID_JSON_BODY, TOKENS_NOT_PAIR
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "401":
-          description: Unauthorized
+          description: TOKEN_INVALID, DIFFERENT_USER_AGENT
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "404":
-          description: Not Found
+          description: TOKEN_NOT_FOUND
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "409":
-          description: Conflict
+          description: TOKEN_ALREADY_USED
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "500":
-          description: Internal Server Error
+          description: INTERNAL_SERVER_ERROR
           schema:
-            type: string
-      summary: Update a pair of tokens
+            $ref: '#/definitions/handlers.HTTPError'
+      summary: Update token pair
       tags:
       - auth
   /users/guid:
     get:
-      description: Returns user's id (GUID)
+      description: Returns users id (GUID)
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/dto.UserId'
         "401":
-          description: Unauthorized
+          description: TOKEN_INVALID, TOKEN_EXPIRED, TOKEN_BLACKLISTED
           schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
         "500":
-          description: Internal Server Error
+          description: INTERNAL_SERVER_ERROR
           schema:
-            type: string
+            $ref: '#/definitions/handlers.HTTPError'
       security:
       - ApiKeyAuth: []
-      summary: Get user id (GUID)
+      summary: Get user id
       tags:
       - users
 securityDefinitions:

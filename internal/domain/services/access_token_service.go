@@ -39,12 +39,12 @@ func (ats *AccessTokenService) GenerateAccessToken(userId string) (*string, erro
 	return &accessToken, nil
 }
 
-func (ats *AccessTokenService) PayloadFromAccessToken(token string) (*entities.AccessToken, error) {
+func (ats *AccessTokenService) GetAccessTokenEntity(token string) (*entities.AccessToken, error) {
 	tokenObj, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		return []byte(ats.secretKey), nil
 	})
 
-	if err != nil {
+	if err != nil && !errors.Is(ats.mapJWTErrToDomainErr(err), domain.ErrTokenExpired) {
 		return nil, ats.mapJWTErrToDomainErr(err)
 	}
 
@@ -53,23 +53,7 @@ func (ats *AccessTokenService) PayloadFromAccessToken(token string) (*entities.A
 	exp := int64(payload["exp"].(float64))
 	jti := payload["jti"].(string)
 
-	return &entities.AccessToken{UserId: userId, ExpiresAt: exp, JTI: jti}, nil
-}
-
-func (ats *AccessTokenService) PayloadFromExpiredAccessToken(token string) (*entities.AccessToken, error) {
-	tokenObj, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		return []byte(ats.secretKey), nil
-	})
-	if err == nil || errors.Is(ats.mapJWTErrToDomainErr(err), domain.ErrTokenExpired) {
-		payload := tokenObj.Claims.(jwt.MapClaims)
-		userId := payload["id"].(string)
-		exp := int64(payload["exp"].(float64))
-		jti := payload["jti"].(string)
-
-		return &entities.AccessToken{UserId: userId, ExpiresAt: exp, JTI: jti}, nil
-	}
-
-	return nil, ats.mapJWTErrToDomainErr(err)
+	return &entities.AccessToken{UserId: userId, ExpiresAt: exp, JTI: jti}, err
 }
 
 func (ats *AccessTokenService) AddJTIToBlacklist(jti string, expiredAt int64) error {
@@ -92,8 +76,6 @@ func (ats *AccessTokenService) mapJWTErrToDomainErr(err error) error {
 	switch {
 	case errors.Is(err, jwt.ErrTokenExpired):
 		return domain.ErrTokenExpired
-	case errors.Is(err, jwt.ErrTokenSignatureInvalid):
-		return domain.ErrTokenSignatureInvalid
 	default:
 		return err
 	}

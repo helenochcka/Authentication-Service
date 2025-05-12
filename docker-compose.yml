@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   authentication_service:
     build:
@@ -7,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: app
     restart: always
+    environment:
+      CONFIG_PATH: config/config.yaml
     ports:
       - "8080:8080"
     depends_on:

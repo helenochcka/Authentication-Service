@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/login": {
             "post": {
-                "description": "Returns token pairs (access + refresh) by GUID",
+                "description": "Returns token pair (access + refresh) for user id (GUID)",
                 "produces": [
                     "application/json"
                 ],
@@ -40,22 +40,16 @@ const docTemplate = `{
                             "$ref": "#/definitions/dto.TokenPair"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "INVALID_QUERY_PARAMS",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "INTERNAL_SERVER_ERROR",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     }
                 }
@@ -73,7 +67,7 @@ const docTemplate = `{
                 "summary": "Logout user",
                 "parameters": [
                     {
-                        "description": "tokens for invalidate",
+                        "description": "tokens to invalidate",
                         "name": "tokens",
                         "in": "body",
                         "required": true,
@@ -83,40 +77,37 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "INVALID_JSON_BODY, TOKENS_NOT_PAIR",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_BLACKLISTED",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "TOKEN_NOT_FOUND",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "TOKEN_ALREADY_USED",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "INTERNAL_SERVER_ERROR",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     }
                 }
@@ -124,17 +115,17 @@ const docTemplate = `{
         },
         "/tokens/refresh": {
             "put": {
-                "description": "Returns updated token pairs (access + refresh)",
+                "description": "Returns updated token pair (access + refresh)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "auth"
                 ],
-                "summary": "Update a pair of tokens",
+                "summary": "Update token pair",
                 "parameters": [
                     {
-                        "description": "tokens for update",
+                        "description": "tokens to update",
                         "name": "tokens",
                         "in": "body",
                         "required": true,
@@ -151,33 +142,33 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "INVALID_JSON_BODY, TOKENS_NOT_PAIR",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "TOKEN_INVALID, DIFFERENT_USER_AGENT",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "TOKEN_NOT_FOUND",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "TOKEN_ALREADY_USED",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "INTERNAL_SERVER_ERROR",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     }
                 }
@@ -190,37 +181,31 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns user's id (GUID)",
+                "description": "Returns users id (GUID)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Get user id (GUID)",
+                "summary": "Get user id",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/dto.UserId"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "TOKEN_INVALID, TOKEN_EXPIRED, TOKEN_BLACKLISTED",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "INTERNAL_SERVER_ERROR",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.HTTPError"
                         }
                     }
                 }
@@ -238,6 +223,28 @@ const docTemplate = `{
                 "refresh_token": {
                     "type": "string",
                     "example": "c29tZS1iYXNlNjQtcmVmcmVzaC10b2tlbg=="
+                }
+            }
+        },
+        "dto.UserId": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "example": "12345"
+                }
+            }
+        },
+        "handlers.HTTPError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "EXAMPLE_ERROR_CODE"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "example error message"
                 }
             }
         }

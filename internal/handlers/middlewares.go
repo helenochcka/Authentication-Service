@@ -1,4 +1,4 @@
-package middlewares
+package handlers
 
 import (
 	"Authentication-Service/internal/domain"
@@ -34,11 +34,13 @@ func (am *AuthMiddleware) AuthUser() gin.HandlerFunc {
 
 func mapDomainErrToHTTPErr(err error, c *gin.Context) {
 	switch {
-	case errors.Is(err, domain.ErrTokenExpired) ||
-		errors.Is(err, domain.ErrTokenSignatureInvalid) ||
-		errors.Is(err, domain.ErrTokenBlacklisted):
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	case errors.Is(err, domain.ErrTokenExpired):
+		c.JSON(http.StatusUnauthorized, HTTPError{Code: "TOKEN_EXPIRED", Message: "access token is expired"})
+	case errors.Is(err, domain.ErrTokenBlacklisted):
+		c.JSON(http.StatusUnauthorized, HTTPError{Code: "TOKEN_BLACKLISTED", Message: "access token is blacklisted"})
+	case errors.Is(err, domain.ErrTokenInvalid):
+		c.JSON(http.StatusUnauthorized, HTTPError{Code: "TOKEN_INVALID", Message: "access token is invalid"})
 	default:
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, HTTPError{Code: "INTERNAL_SERVER_ERROR", Message: err.Error()})
 	}
 }

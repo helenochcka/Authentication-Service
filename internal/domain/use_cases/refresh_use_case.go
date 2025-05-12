@@ -27,25 +27,19 @@ func (ruc *RefreshUseCase) Execute(userData *dto.UserData, tokens *dto.TokenPair
 		return nil, err
 	}
 
-	payload, err := ruc.as.PayloadFromAccessToken(tokens.AccessToken)
-	if errors.Is(err, domain.ErrTokenExpired) {
-		payload, err = ruc.as.PayloadFromExpiredAccessToken(tokens.AccessToken)
-		if err != nil {
-			return nil, err
-		}
-		if payload.JTI != refreshToken.AccessJTI {
-			return nil, domain.ErrTokensAreNotAPair
-		}
-	} else if err == nil {
-		if payload.JTI != refreshToken.AccessJTI {
-			return nil, domain.ErrTokensAreNotAPair
-		}
-		err = ruc.as.AddJTIToBlacklist(refreshToken.AccessJTI, payload.ExpiresAt)
-		if err != nil {
-			return nil, err
-		}
-	} else {
+	accessToken, err := ruc.as.GetAccessTokenEntity(tokens.AccessToken)
+	if err != nil && !errors.Is(err, domain.ErrTokenExpired) {
 		return nil, err
+	}
+	if accessToken.JTI != refreshToken.AccessJTI {
+		return nil, domain.ErrTokensAreNotAPair
+	}
+
+	if err == nil {
+		err = ruc.as.AddJTIToBlacklist(refreshToken.AccessJTI, accessToken.ExpiresAt)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = ruc.ts.MarkRefreshTokenAsUsed(refreshToken)
@@ -71,17 +65,17 @@ func (ruc *RefreshUseCase) Execute(userData *dto.UserData, tokens *dto.TokenPair
 		}
 	}
 
-	at, err := ruc.as.GenerateAccessToken(payload.UserId)
+	at, err := ruc.as.GenerateAccessToken(accessToken.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	payload, err = ruc.as.PayloadFromAccessToken(*at)
+	accessToken, err = ruc.as.GetAccessTokenEntity(*at)
 	if err != nil {
 		return nil, err
 	}
 
-	rt, err := ruc.ts.GenerateRefreshToken(userData, payload.JTI, payload.UserId)
+	rt, err := ruc.ts.GenerateRefreshToken(userData, accessToken.JTI, accessToken.UserId)
 	if err != nil {
 		return nil, err
 	}

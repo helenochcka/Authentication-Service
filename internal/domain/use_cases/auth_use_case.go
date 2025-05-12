@@ -15,7 +15,7 @@ func NewAuthUseCase(ats *services.AccessTokenService) *AuthUseCase {
 }
 
 func (auc *AuthUseCase) Execute(accessToken string) (*entities.AccessToken, error) {
-	at, err := auc.ats.PayloadFromAccessToken(accessToken)
+	at, err := auc.ats.GetAccessTokenEntity(accessToken)
 	if err != nil {
 		return nil, err
 	}

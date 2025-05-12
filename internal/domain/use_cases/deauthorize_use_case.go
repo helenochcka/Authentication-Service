@@ -16,7 +16,7 @@ func NewLogoutUseCase(as *services.AccessTokenService, ts *services.RefreshToken
 }
 
 func (luc *LogoutUseCase) Execute(tokens *dto.TokenPair) error {
-	payload, err := luc.as.PayloadFromAccessToken(tokens.AccessToken)
+	at, err := luc.as.GetAccessTokenEntity(tokens.AccessToken)
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func (luc *LogoutUseCase) Execute(tokens *dto.TokenPair) error {
 		return err
 	}
 
-	if rt.AccessJTI != payload.JTI {
+	if rt.AccessJTI != at.JTI {
 		return domain.ErrTokensAreNotAPair
 	}
 
@@ -35,7 +35,7 @@ func (luc *LogoutUseCase) Execute(tokens *dto.TokenPair) error {
 		return err
 	}
 
-	err = luc.as.AddJTIToBlacklist(rt.AccessJTI, payload.ExpiresAt)
+	err = luc.as.AddJTIToBlacklist(rt.AccessJTI, at.ExpiresAt)
 	if err != nil {
 		return err
 	}

@@ -23,12 +23,12 @@ func (luc *LoginUseCase) Execute(userData *dto.UserData, userId string) (*dto.To
 		return nil, err
 	}
 
-	payload, err := luc.as.PayloadFromAccessToken(*at)
+	atObj, err := luc.as.GetAccessTokenEntity(*at)
 	if err != nil {
 		return nil, err
 	}
 
-	rt, err := luc.ts.GenerateRefreshToken(userData, payload.JTI, userId)
+	rt, err := luc.ts.GenerateRefreshToken(userData, atObj.JTI, userId)
 	if err != nil {
 		return nil, err
 	}

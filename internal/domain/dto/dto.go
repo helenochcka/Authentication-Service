@@ -10,7 +10,7 @@ type UserData struct {
 	IpAddress string
 }
 
-type LoginData struct {
+type UserId struct {
 	UserId string `form:"user_id" example:"12345"`
 }
 

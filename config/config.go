@@ -8,10 +8,11 @@ import (
 
 type Config struct {
 	Server struct {
-		Host         string `yaml:"host"`
-		Port         int    `yaml:"port"`
-		SecretKey    string `yaml:"secret_key"`
-		TokenExpTime int    `yaml:"token_exp_time"`
+		Host                string `yaml:"host"`
+		Port                int    `yaml:"port"`
+		SecretKey           string `yaml:"secret_key"`
+		AccessTokenExpTime  int    `yaml:"access_token_exp_time_min"`
+		RefreshTokenExpTime int    `yaml:"refresh_token_exp_time_days"`
 	} `yaml:"server"`
 
 	DB struct {
@@ -23,8 +24,8 @@ type Config struct {
 	} `yaml:"db"`
 
 	Webhook struct {
-		Host    string `yaml:"host"`
-		TimeOut int    `yaml:"time_out"`
+		Host       string `yaml:"host"`
+		TimeOutSec int    `yaml:"time_out_sec"`
 	} `yaml:"webhook"`
 
 	Redis struct {

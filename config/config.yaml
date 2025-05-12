@@ -2,7 +2,8 @@ server:
   host: 0.0.0.0
   port: 8080
   secret_key: a79c73a0-9ca5-4a16-afef-296497aff250
-  token_exp_time: 15
+  access_token_exp_time_min: 15
+  refresh_token_exp_time_days: 30
 
 db:
   host: db
@@ -13,7 +14,7 @@ db:
 
 webhook:
   host: localhost:80
-  time_out: 5
+  time_out_sec: 5
 
 redis:
   host: redis

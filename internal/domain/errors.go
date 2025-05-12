@@ -3,7 +3,6 @@ package domain
 import "errors"
 
 var ErrTokenExpired = errors.New("token is expired")
-var ErrTokenSignatureInvalid = errors.New("token signature is invalid")
 var ErrMultipleTokensFound = errors.New("multiple tokens found")
 var ErrTokenNotFound = errors.New("token not found")
 var ErrTokenInvalid = errors.New("token is invalid")
