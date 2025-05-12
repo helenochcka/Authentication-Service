@@ -26,13 +26,15 @@ func NewAuthHandler(
 // Login godoc
 //
 //	@Summary		Get token pair
-//	@Description	Returns token pair (access + refresh) for user id (GUID)
+//	@Description	Returns a new pair of access and refresh tokens for the user with the specified GUID.
+//	@Description	The user ID (GUID) must be passed in the request query params.
+//	@Description	Tokens are tied to User-Agent and IP address.
 //	@Tags			auth
 //	@Produce		json
 //	@Param			user_id		query		dto.UserId		true	"user id"
 //	@Success		200			{object}	dto.TokenPair
-//	@Failure		401			{object}	HTTPError		"INVALID_QUERY_PARAMS"
-//	@Failure		500			{object}	HTTPError		"INTERNAL_SERVER_ERROR"
+//	@Failure		401			{object}	HTTPError		"possible error codes: INVALID_QUERY_PARAMS"
+//	@Failure		500			{object}	HTTPError		"possible error codes: INTERNAL_SERVER_ERROR"
 //	@Router			/login		[post]
 func (gh *GinHandler) Login(c *gin.Context) {
 	var loginData dto.UserId
@@ -58,16 +60,19 @@ func (gh *GinHandler) Login(c *gin.Context) {
 // RefreshTokens godoc
 //
 //	@Summary		Update token pair
-//	@Description	Returns updated token pair (access + refresh)
+//	@Description	Refresh the user's token pair (access + refresh) using valid refresh token.
+//	@Description	Refresh is allowed only if User-Agent match the original ones.
+//	@Description	If refresh fails, tokens are invalidated and user is logged out.
+//	@Description	If the IP changes, a webhook notification is triggered.
 //	@Tags			auth
 //	@Produce		json
 //	@Param			tokens	body		dto.TokenPair	true	"tokens to update"
 //	@Success		200		{object}	dto.TokenPair
-//	@Failure		400		{object}	HTTPError		"INVALID_JSON_BODY, TOKENS_NOT_PAIR"
-//	@Failure		401		{object}	HTTPError		"TOKEN_INVALID, DIFFERENT_USER_AGENT"
-//	@Failure		404		{object}	HTTPError		"TOKEN_NOT_FOUND"
-//	@Failure		409		{object}	HTTPError		"TOKEN_ALREADY_USED"
-//	@Failure		500		{object}	HTTPError		"INTERNAL_SERVER_ERROR"
+//	@Failure		400		{object}	HTTPError		"possible error codes: INVALID_JSON_BODY, TOKENS_NOT_PAIR"
+//	@Failure		401		{object}	HTTPError		"possible error codes: TOKEN_INVALID, DIFFERENT_USER_AGENT"
+//	@Failure		404		{object}	HTTPError		"possible error codes: TOKEN_NOT_FOUND"
+//	@Failure		409		{object}	HTTPError		"possible error codes: TOKEN_ALREADY_USED"
+//	@Failure		500		{object}	HTTPError		"possible error codes: INTERNAL_SERVER_ERROR"
 //	@Router			/tokens/refresh		[put]
 func (gh *GinHandler) RefreshTokens(c *gin.Context) {
 	var tokens dto.TokenPair
@@ -92,12 +97,13 @@ func (gh *GinHandler) RefreshTokens(c *gin.Context) {
 // GetUserId godoc
 //
 //	@Summary		Get user id
-//	@Description	Returns users id (GUID)
+//	@Description	Return the GUID of the currently authenticated user.
+//	@Description	Requires a valid access token provided in the Authorization header.
 //	@Tags			users
 //	@Produce		json
 //	@Success		200	{object}	dto.UserId
-//	@Failure		401	{object}	HTTPError	"TOKEN_INVALID, TOKEN_EXPIRED, TOKEN_BLACKLISTED"
-//	@Failure		500	{object}	HTTPError	"INTERNAL_SERVER_ERROR"
+//	@Failure		401	{object}	HTTPError	"possible error codes: TOKEN_INVALID, TOKEN_EXPIRED, TOKEN_BLACKLISTED"
+//	@Failure		500	{object}	HTTPError	"possible error codes: INTERNAL_SERVER_ERROR"
 //	@Router			/users/guid	[get]
 //	@Security		ApiKeyAuth
 func (gh *GinHandler) GetUserId(c *gin.Context) {
@@ -113,16 +119,17 @@ func (gh *GinHandler) GetUserId(c *gin.Context) {
 // Logout godoc
 //
 //	@Summary		Logout user
-//	@Description	Invalidate tokens
+//	@Description	Invalidate the current token pair (access + refresh), logging the user out.
+//	@Description	After this, the user must re-authenticate to access protected routes.
 //	@Tags			auth
 //	@Produce		json
 //	@Param			tokens	body		dto.TokenPair	true	"tokens to invalidate"
 //	@Success		204
-//	@Failure		400		{object}	HTTPError		"INVALID_JSON_BODY, TOKENS_NOT_PAIR"
-//	@Failure		401		{object}	HTTPError		"TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_BLACKLISTED"
-//	@Failure		404		{object}	HTTPError		"TOKEN_NOT_FOUND"
-//	@Failure		409		{object}	HTTPError		"TOKEN_ALREADY_USED"
-//	@Failure		500		{object}	HTTPError		"INTERNAL_SERVER_ERROR"
+//	@Failure		400		{object}	HTTPError		"possible error codes: INVALID_JSON_BODY, TOKENS_NOT_PAIR"
+//	@Failure		401		{object}	HTTPError		"possible error codes: TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_BLACKLISTED"
+//	@Failure		404		{object}	HTTPError		"possible error codes: TOKEN_NOT_FOUND"
+//	@Failure		409		{object}	HTTPError		"possible error codes: TOKEN_ALREADY_USED"
+//	@Failure		500		{object}	HTTPError		"possible error codes: INTERNAL_SERVER_ERROR"
 //	@Router			/logout		[post]
 func (gh *GinHandler) Logout(c *gin.Context) {
 	var tokens dto.TokenPair

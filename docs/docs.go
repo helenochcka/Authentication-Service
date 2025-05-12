@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/login": {
             "post": {
-                "description": "Returns token pair (access + refresh) for user id (GUID)",
+                "description": "Returns a new pair of access and refresh tokens for the user with the specified GUID.\nThe user ID (GUID) must be passed in the request query params.\nTokens are tied to User-Agent and IP address.",
                 "produces": [
                     "application/json"
                 ],
@@ -41,13 +41,13 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "INVALID_QUERY_PARAMS",
+                        "description": "possible error codes: INVALID_QUERY_PARAMS",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "INTERNAL_SERVER_ERROR",
+                        "description": "possible error codes: INTERNAL_SERVER_ERROR",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
@@ -57,7 +57,7 @@ const docTemplate = `{
         },
         "/logout": {
             "post": {
-                "description": "Invalidate tokens",
+                "description": "Invalidate the current token pair (access + refresh), logging the user out.\nAfter this, the user must re-authenticate to access protected routes.",
                 "produces": [
                     "application/json"
                 ],
@@ -81,31 +81,31 @@ const docTemplate = `{
                         "description": "No Content"
                     },
                     "400": {
-                        "description": "INVALID_JSON_BODY, TOKENS_NOT_PAIR",
+                        "description": "possible error codes: INVALID_JSON_BODY, TOKENS_NOT_PAIR",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "401": {
-                        "description": "TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_BLACKLISTED",
+                        "description": "possible error codes: TOKEN_EXPIRED, TOKEN_INVALID, TOKEN_BLACKLISTED",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "404": {
-                        "description": "TOKEN_NOT_FOUND",
+                        "description": "possible error codes: TOKEN_NOT_FOUND",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "409": {
-                        "description": "TOKEN_ALREADY_USED",
+                        "description": "possible error codes: TOKEN_ALREADY_USED",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "INTERNAL_SERVER_ERROR",
+                        "description": "possible error codes: INTERNAL_SERVER_ERROR",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
@@ -115,7 +115,7 @@ const docTemplate = `{
         },
         "/tokens/refresh": {
             "put": {
-                "description": "Returns updated token pair (access + refresh)",
+                "description": "Refresh the user's token pair (access + refresh) using valid refresh token.\nRefresh is allowed only if User-Agent match the original ones.\nIf refresh fails, tokens are invalidated and user is logged out.\nIf the IP changes, a webhook notification is triggered.",
                 "produces": [
                     "application/json"
                 ],
@@ -142,31 +142,31 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "INVALID_JSON_BODY, TOKENS_NOT_PAIR",
+                        "description": "possible error codes: INVALID_JSON_BODY, TOKENS_NOT_PAIR",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "401": {
-                        "description": "TOKEN_INVALID, DIFFERENT_USER_AGENT",
+                        "description": "possible error codes: TOKEN_INVALID, DIFFERENT_USER_AGENT",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "404": {
-                        "description": "TOKEN_NOT_FOUND",
+                        "description": "possible error codes: TOKEN_NOT_FOUND",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "409": {
-                        "description": "TOKEN_ALREADY_USED",
+                        "description": "possible error codes: TOKEN_ALREADY_USED",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "INTERNAL_SERVER_ERROR",
+                        "description": "possible error codes: INTERNAL_SERVER_ERROR",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
@@ -181,7 +181,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns users id (GUID)",
+                "description": "Return the GUID of the currently authenticated user.\nRequires a valid access token provided in the Authorization header.",
                 "produces": [
                     "application/json"
                 ],
@@ -197,13 +197,13 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "TOKEN_INVALID, TOKEN_EXPIRED, TOKEN_BLACKLISTED",
+                        "description": "possible error codes: TOKEN_INVALID, TOKEN_EXPIRED, TOKEN_BLACKLISTED",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "INTERNAL_SERVER_ERROR",
+                        "description": "possible error codes: INTERNAL_SERVER_ERROR",
                         "schema": {
                             "$ref": "#/definitions/handlers.HTTPError"
                         }
